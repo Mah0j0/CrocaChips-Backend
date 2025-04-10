@@ -23,8 +23,8 @@ Sigue estos pasos para instalar y configurar el proyecto en tu máquina local:
 2. **Crea un entorno virtual**:
 
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # En Windows: `venv\Scripts\activate`
+   py -m venv venv
+   venv/bin/activate
    ```
 
 3. **Instala las dependencias**:
