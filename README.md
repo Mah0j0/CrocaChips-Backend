@@ -12,13 +12,13 @@ Antes de comenzar, asegúrate de tener los siguientes requisitos:
 
 ## Instalación
 
-Sigue estos pasos para instalar y configurar el proyecto en tu máquina local:
+Sigue estos pasos para instalar y configurar el proyecto:
 
 1. **Clona el repositorio**:
 
    ```bash
-   git clone (nombre del repositorio)
-   cd (nombre del repositorio)
+   git clone https://github.com/Mah0j0/CrocaChips-Backend.git
+   cd CrocaChips-Backend
 
 2. **Crea un entorno virtual**:
 
