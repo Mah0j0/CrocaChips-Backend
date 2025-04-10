@@ -2,8 +2,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Empleado
 from .serializers import EmpleadoSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.hashers import check_password
 import bcrypt
-
 
 @api_view(['GET'])
 def lista_empleados(request):
@@ -33,16 +36,26 @@ def login_empleado(request):
     except Empleado.DoesNotExist:
         return Response({'error': 'Credenciales inválidas'}, status=401)
 
+    # Verificar la clave usando bcrypt
     clave_valida = bcrypt.checkpw(clave.encode('utf-8'), empleado.clave.encode('utf-8'))
 
     if not clave_valida:
         return Response({'error': 'Credenciales inválidas'}, status=401)
 
-    # Si llega aquí, el login fue exitoso
+    # Si la autenticación fue exitosa, generamos el token
+    refresh = RefreshToken.for_user(empleado)
+
+    # Añadimos 'id_empleado' manualmente al token
+    refresh['id'] = empleado.id
+
     return Response({
-        'id_empleado': empleado.id_empleado,
-        'nombre': empleado.nombre,
-        'apellido': empleado.apellido,
-        'rol': empleado.rol,
-        'usuario': empleado.usuario
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+        'empleado': {
+            'id': empleado.id,
+            'nombre': empleado.nombre,
+            'apellido': empleado.apellido,
+            'rol': empleado.rol,
+            'usuario': empleado.usuario
+        }
     })
