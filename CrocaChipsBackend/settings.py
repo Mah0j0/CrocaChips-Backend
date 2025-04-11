@@ -15,6 +15,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import pymysql
 from datetime import timedelta
+from corsheaders.defaults import default_headers
 
 pymysql.install_as_MySQLdb()
 
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'Empleados',
 
     # Librerias
+    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
@@ -62,6 +64,8 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -106,7 +110,15 @@ DATABASES = {
     }
 }
 
+CORS_ALLOWED_ORIGINS = [
+    os.getenv("FRONTEND_URL", "http://localhost:5173"),
+]
 
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "Authorization",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
