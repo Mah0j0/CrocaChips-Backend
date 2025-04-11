@@ -1,28 +1,31 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Empleado
 from .serializers import EmpleadoSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.hashers import check_password
 import bcrypt
 
+# Vista para obtener la lista de empleados, protegida por autenticación
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Requiere autenticación para acceder a esta vista
 def lista_empleados(request):
     empleados = Empleado.objects.all()  # Obtiene todos los empleados
     serializer = EmpleadoSerializer(empleados, many=True)  # Serializa los empleados
     return Response(serializer.data)  # Devuelve los empleados serializados como respuesta JSON
 
+# Vista para obtener un empleado específico por ID, protegida por autenticación
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Requiere autenticación para acceder a esta vista
 def empleado(request, id):
     try:
-        empleado = Empleado.objects.get(id_empleado=id)  # Obtiene el empleado por ID
+        empleado = Empleado.objects.get(id=id)  # Cambié de 'id_empleado' a 'id'
     except Empleado.DoesNotExist:
         return Response({'error': 'Empleado no encontrado'}, status=404)
     serializer = EmpleadoSerializer(empleado)
     return Response(serializer.data)
 
+# Vista de login para empleados (no requiere autenticación, se puede acceder sin token)
 @api_view(['POST'])
 def login_empleado(request):
     usuario = request.data.get('usuario')
@@ -46,13 +49,13 @@ def login_empleado(request):
     refresh = RefreshToken.for_user(empleado)
 
     # Añadimos 'id_empleado' manualmente al token
-    refresh['id'] = empleado.id
+    refresh['id'] = empleado.id  # Usamos id_empleado si es el campo correcto
 
     return Response({
         'refresh': str(refresh),
         'access': str(refresh.access_token),
         'empleado': {
-            'id': empleado.id,
+            'id': empleado.id,  # Usamos id_empleado en la respuesta
             'nombre': empleado.nombre,
             'apellido': empleado.apellido,
             'rol': empleado.rol,
