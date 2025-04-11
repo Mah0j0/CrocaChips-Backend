@@ -48,8 +48,8 @@ def login_empleado(request):
     # Si la autenticación fue exitosa, generamos el token
     refresh = RefreshToken.for_user(empleado)
 
-    # Añadimos 'id_empleado' manualmente al token
-    refresh['id'] = empleado.id  # Usamos id_empleado si es el campo correcto
+
+    refresh['id'] = empleado.id 
 
     return Response({
         'refresh': str(refresh),
