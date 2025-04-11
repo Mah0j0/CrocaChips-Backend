@@ -72,6 +72,43 @@ def registrar_empleado(request):
         'clave_generada': clave_generada
     }, status=201)
 
+
+# VISTA PARA ACTUALIZAR UN EMPLEADO
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def actualizar_empleado(request, id):
+    try:
+        empleado = Empleado.objects.get(id=id)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
+
+    data = request.data
+
+    # Actualizar los campos del empleado
+    empleado.rol = data.get('rol', empleado.rol)
+    empleado.telefono = data.get('telefono', empleado.telefono)
+
+    # Guardar los cambios
+    empleado.save()
+
+    serializer = EmpleadoSerializer(empleado)
+    return Response({'mensaje': 'Empleado actualizado correctamente'}, status=200)
+
+# VISTA PARA DESHABILITAR UN EMPLEADO (BORRADO LOGICO)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def deshabilitar_empleado(request, id):
+    try:
+        empleado = Empleado.objects.get(id=id)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
+
+    empleado.habilitado = False
+    empleado.save()
+
+    return Response({'mensaje': 'Empleado deshabilitado correctamente'}, status=200)
+
+
 # Vista de login para empleados (no requiere autenticación, se puede acceder sin token)
 @api_view(['POST'])
 def login_empleado(request):

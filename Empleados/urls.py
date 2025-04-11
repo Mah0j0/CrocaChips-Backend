@@ -5,5 +5,7 @@ urlpatterns = [
     path('empleados/', lista_empleados),
     path('empleados/<int:id>/', empleado),
     path('empleados/registrar/', registrar_empleado),
+    path('empleados/actualizar/<int:id>/', actualizar_empleado),
+    path('empleados/deshabilitar/<int:id>/', deshabilitar_empleado),
     path('login/', login_empleado),
 ]
