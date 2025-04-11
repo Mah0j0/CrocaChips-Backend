@@ -13,7 +13,7 @@ class Empleado(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'empleados'  # Asegúrate de que se use la tabla 'empleados'
+        db_table = 'empleados'
     
     def __str__(self):
         return f"{self.nombre} {self.apellido}"

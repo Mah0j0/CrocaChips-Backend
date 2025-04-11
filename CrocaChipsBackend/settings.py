@@ -118,6 +118,11 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "Authorization",
 ]
 
+# CONFIGURACION JWT
+SIMPLE_JWT = {
+      'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+}
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Password validation
