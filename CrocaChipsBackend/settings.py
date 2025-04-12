@@ -115,8 +115,13 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
-    "Authorization",
+    'X-Requested-With',
+    'Content-Type',
+    'Authorization',
 ]
+
+# Opcional para desarrollo (desactivalo en producción)
+CORS_ALLOW_ALL_ORIGINS = True
 
 # CONFIGURACION JWT
 SIMPLE_JWT = {
