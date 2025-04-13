@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     # Apps propias
     'Empleados',
+    'Productos',
 
     # Librerias
     'corsheaders',
@@ -102,11 +103,11 @@ WSGI_APPLICATION = 'CrocaChipsBackend.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',  
-        'NAME': os.getenv('DB_NAME'),         
-        'USER': os.getenv('DB_USER'),         
-        'PASSWORD': os.getenv('DB_PASSWORD'),  
-        'HOST': os.getenv('DB_HOST'),  
-        'PORT': os.getenv('DB_PORT'), 
+        'NAME': 'bd_croca_chips',         
+        'USER': 'root',         
+        'PASSWORD': 'tArtcqaAiRUuFxZvUTiqjRNHYagEEdtR',  
+        'HOST': 'maglev.proxy.rlwy.net',  
+        'PORT': '43380', 
     }
 }
 
