@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     # Apps propias
     'Empleados',
+    'Productos',
 
     # Librerias
     'corsheaders',
