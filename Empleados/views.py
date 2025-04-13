@@ -6,50 +6,59 @@ from .models import Empleado
 from .serializers import EmpleadoSerializer
 import bcrypt
 
-# Vista para obtener la lista de empleados, protegida por autenticación
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Requiere autenticación para acceder a esta vista
-def lista_empleados(request):
-    empleados = Empleado.objects.all()  # Obtiene todos los empleados
-    serializer = EmpleadoSerializer(empleados, many=True)  # Serializa los empleados
-    return Response(serializer.data)  # Devuelve los empleados serializados como respuesta JSON
 
-# Vista para obtener un empleado específico por ID, protegida por autenticación
+# Obtener todos los empleados (autenticado)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Requiere autenticación para acceder a esta vista
-def empleado(request, id):
+@permission_classes([IsAuthenticated])
+def lista_empleados(request):
+    empleados = Empleado.objects.all()
+    serializer = EmpleadoSerializer(empleados, many=True)
+    return Response(serializer.data)
+
+# Obtener perfil del empleado autenticado
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def mi_perfil(request):
     try:
-        empleado = Empleado.objects.get(id=id)  # Cambié de 'id_empleado' a 'id'
+        empleado = Empleado.objects.get(usuario=request.user)
     except Empleado.DoesNotExist:
         return Response({'error': 'Empleado no encontrado'}, status=404)
+
     serializer = EmpleadoSerializer(empleado)
     return Response(serializer.data)
 
+# Obtener un empleado por ID
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def empleado(request, id):
+    try:
+        empleado = Empleado.objects.get(id=id)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
 
-# Vista para registrar un nuevo empleado
+    serializer = EmpleadoSerializer(empleado)
+    return Response(serializer.data)
+
+# Registrar nuevo empleado
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def registrar_empleado(request):
     data = request.data
 
-    # Validar campos requeridos
-    campos = ['nombre', 'apellido', 'carnet', 'rol', 'telefono']
-    for campo in campos:
-        if campo not in data:
+    campos_requeridos = ['nombre', 'apellido', 'carnet', 'rol', 'telefono']
+    for campo in campos_requeridos:
+        if not data.get(campo):
             return Response({'error': f'El campo {campo} es requerido'}, status=400)
-    
+
     nombre = data['nombre'].strip()
     apellido = data['apellido'].strip()
     carnet = data['carnet'].strip()
 
-    # Generar usuario: primera letra del nombre + apellido + dos primeros del carnet
     usuario_generado = f"{nombre[0].upper()}{apellido}{carnet[:2]}"
 
-    # Verificar si el usuario ya existe
     if Empleado.objects.filter(usuario=usuario_generado).exists():
         return Response({'error': 'El usuario generado ya está registrado'}, status=409)
 
-    # Generar clave: primera letra del nombre + primera del apellido + últimos 4 del carnet
     clave_generada = f"{nombre[0].upper()}{apellido[0].upper()}{carnet[-4:]}"
     clave_encriptada = bcrypt.hashpw(clave_generada.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -72,8 +81,7 @@ def registrar_empleado(request):
         'clave_generada': clave_generada
     }, status=201)
 
-
-# VISTA PARA ACTUALIZAR UN EMPLEADO
+# Actualizar empleado
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def actualizar_empleado(request, id):
@@ -84,17 +92,13 @@ def actualizar_empleado(request, id):
 
     data = request.data
 
-    # Actualizar los campos del empleado
     empleado.rol = data.get('rol', empleado.rol)
     empleado.telefono = data.get('telefono', empleado.telefono)
-
-    # Guardar los cambios
     empleado.save()
 
-    serializer = EmpleadoSerializer(empleado)
     return Response({'mensaje': 'Empleado actualizado correctamente'}, status=200)
 
-# VISTA PARA DESHABILITAR UN EMPLEADO (BORRADO LOGICO)
+# Deshabilitar empleado (borrado lógico)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def deshabilitar_empleado(request, id):
@@ -108,13 +112,13 @@ def deshabilitar_empleado(request, id):
 
     return Response({'mensaje': 'Empleado deshabilitado correctamente'}, status=200)
 
-
-# Vista de login para empleados (no requiere autenticación, se puede acceder sin token)
+# Login de empleado (sin autenticación previa)
 @api_view(['POST'])
 def login_empleado(request):
-    usuario = request.data.get('usuario')
-    clave = request.data.get('clave')
+    usuario = request.data.get('usuario', '').strip()
+    clave = request.data.get('clave', '').strip()
 
+    # Validar campos requeridos
     if not usuario or not clave:
         return Response({'error': 'Usuario y clave son requeridos'}, status=400)
 
@@ -123,26 +127,19 @@ def login_empleado(request):
     except Empleado.DoesNotExist:
         return Response({'error': 'Credenciales inválidas'}, status=401)
 
-    # Verificar la clave usando bcrypt
-    clave_valida = bcrypt.checkpw(clave.encode('utf-8'), empleado.clave.encode('utf-8'))
-
-    if not clave_valida:
+    # Verificar la contraseña
+    if not bcrypt.checkpw(clave.encode('utf-8'), empleado.clave.encode('utf-8')):
         return Response({'error': 'Credenciales inválidas'}, status=401)
 
-    # Si la autenticación fue exitosa, generamos el token
+    # Verificar si el empleado está habilitado
+    if not empleado.habilitado:
+        return Response({'error': 'Empleado deshabilitado. Contacte al administrador.'}, status=403)
+
+    # Generar tokens JWT
     refresh = RefreshToken.for_user(empleado)
-
-
-    refresh['id'] = empleado.id 
+    refresh['id'] = empleado.id  # Puedes añadir más campos si quieres (como rol, nombre, etc.)
 
     return Response({
         'refresh': str(refresh),
         'access': str(refresh.access_token),
-        'empleado': {
-            'id': empleado.id,  # Usamos id_empleado en la respuesta
-            'nombre': empleado.nombre,
-            'apellido': empleado.apellido,
-            'rol': empleado.rol,
-            'usuario': empleado.usuario
-        }
-    })
+    }, status=200)
