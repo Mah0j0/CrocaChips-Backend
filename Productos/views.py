@@ -16,9 +16,9 @@ def lista_productos(request):
 # producto - (GET)
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated])
-def producto(request, id):
+def producto(request, id_producto):
     try:
-        producto = Producto.objects.get(id=id) # Buscar producto por ID
+        producto = Producto.objects.get(id_producto=id_producto) # Buscar producto por ID
     except Producto.DoesNotExist:
         return Response({'error': 'Producto no encontrado'}, status=404)
     serializer = ProductoSerializer(producto) # Serializar y retornar el producto
@@ -47,9 +47,9 @@ def registrar_producto(request):
 # actualizar_producto - (PUT)
 @api_view(['PUT'])
 #@permission_classes([IsAuthenticated])
-def actualizar_producto(request, id):
+def actualizar_producto(request, id_producto):
     try:
-        producto = Producto.objects.get(id=id) # Buscar producto por ID
+        producto = Producto.objects.get(id_producto=id_producto) # Buscar producto por ID
     except Producto.DoesNotExist:
         return Response({'error': 'Producto no encontrado'}, status=404)
     # Actualización parcial
@@ -67,9 +67,9 @@ def actualizar_producto(request, id):
 # eliminar_producto - (DELETE)
 @api_view(['DELETE'])
 #@permission_classes([IsAuthenticated])
-def eliminar_producto(request, id):
+def eliminar_producto(request, id_producto):
     try:
-        producto = Producto.objects.get(id=id)
+        producto = Producto.objects.get(id_producto=id_producto)
     except Producto.DoesNotExist:
         return Response({'error': 'Producto no encontrado'}, status=404)
 

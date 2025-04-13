@@ -1,7 +1,7 @@
 from django.db import models
 
 class Producto(models.Model):
-    id = models.AutoField(primary_key=True)
+    id_producto = models.AutoField(primary_key=True, db_column='id_producto')
     nombre = models.CharField(max_length=255)
     descripcion = models.CharField(max_length=255)
     tiempo_vida = models.IntegerField()
