@@ -7,6 +7,7 @@ class Producto(models.Model):
     tiempo_vida = models.IntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField()
+    habilitado = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         db_table = 'productos'

@@ -6,7 +6,7 @@ from .serializers import ProductoSerializer
 
 # lista_productos - (GET)
 @api_view(['GET'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def lista_productos(request):
     productos = Producto.objects.all() # Listar
     serializer = ProductoSerializer(productos, many=True) # Serializar
@@ -15,7 +15,7 @@ def lista_productos(request):
 
 # producto - (GET)
 @api_view(['GET'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def producto(request, id_producto):
     try:
         producto = Producto.objects.get(id_producto=id_producto) # Buscar producto por ID
@@ -27,7 +27,7 @@ def producto(request, id_producto):
 
 # registrar_producto - (POST)
 @api_view(['POST'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def registrar_producto(request):
     data = request.data
 
@@ -46,7 +46,7 @@ def registrar_producto(request):
 
 # actualizar_producto - (PUT)
 @api_view(['PUT'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def actualizar_producto(request, id_producto):
     try:
         producto = Producto.objects.get(id_producto=id_producto) # Buscar producto por ID
@@ -66,12 +66,13 @@ def actualizar_producto(request, id_producto):
 
 # eliminar_producto - (DELETE)
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def eliminar_producto(request, id_producto):
     try:
         producto = Producto.objects.get(id_producto=id_producto)
     except Producto.DoesNotExist:
         return Response({'error': 'Producto no encontrado'}, status=404)
 
-    producto.delete()  # Eliminar producto   
+    producto.habilitado = False
+    producto.save()   
     return Response({'mensaje': 'Producto eliminado correctamente'}, status=200)
