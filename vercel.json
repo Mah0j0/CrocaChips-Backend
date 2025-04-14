@@ -1,0 +1,15 @@
+{
+    "builds":[
+        {
+            "src": "CrocaChipsBackend/wsgi.py",
+            "use": "@vercel/python"
+        }
+
+    ],
+    "routes":[
+        {
+            "src": "/(.*)",
+            "dest": "CrocaChipsBackend/wsgi.py"
+        }
+    ]
+}
