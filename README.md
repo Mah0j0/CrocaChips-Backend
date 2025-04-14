@@ -24,7 +24,7 @@ Sigue estos pasos para instalar y configurar el proyecto:
 
    ```bash
    py -m venv venv
-   venv/bin/activate
+   venv/scripts/activate
    ```
 
 3. **Instala las dependencias**:
