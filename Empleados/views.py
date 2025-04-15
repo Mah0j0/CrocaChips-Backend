@@ -84,33 +84,47 @@ def registrar_empleado(request):
 # Actualizar empleado
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def actualizar_empleado(request, id):
+def actualizar_empleado(request):
+    data = request.data
+    empleado_id = data.get('id')
+
+    if not empleado_id:
+        return Response({'error': 'ID del empleado es requerido'}, status=400)
+
     try:
-        empleado = Empleado.objects.get(id=id)
+        empleado = Empleado.objects.get(id=empleado_id)
     except Empleado.DoesNotExist:
         return Response({'error': 'Empleado no encontrado'}, status=404)
 
-    data = request.data
-
+    empleado.nombre = data.get('nombre', empleado.nombre)
+    empleado.apellido = data.get('apellido', empleado.apellido)
     empleado.rol = data.get('rol', empleado.rol)
     empleado.telefono = data.get('telefono', empleado.telefono)
     empleado.save()
 
-    return Response({'mensaje': 'Empleado actualizado correctamente'}, status=200)
+    serializer = EmpleadoSerializer(empleado)
+    return Response({'mensaje': 'Empleado actualizado correctamente', 'empleado': serializer.data}, status=200)
+
 
 # Deshabilitar empleado (borrado lógico)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def deshabilitar_empleado(request, id):
+def deshabilitar_empleado(request):
+    data = request.data
+    empleado_id = data.get('id')
+
+    if not empleado_id:
+        return Response({'error': 'ID del empleado es requerido'}, status=400)
+    
     try:
-        empleado = Empleado.objects.get(id=id)
+        empleado = Empleado.objects.get(id=empleado_id)
     except Empleado.DoesNotExist:
         return Response({'error': 'Empleado no encontrado'}, status=404)
 
     empleado.habilitado = False
     empleado.save()
-
-    return Response({'mensaje': 'Empleado deshabilitado correctamente'}, status=200)
+    serializer = EmpleadoSerializer(empleado)
+    return Response({'mensaje': 'Empleado deshabilitado correctamente', 'empleado': serializer.data}, status=200)
 
 # Login de empleado (sin autenticación previa)
 @api_view(['POST'])

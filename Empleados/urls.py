@@ -5,8 +5,8 @@ urlpatterns = [
     path('empleados/', lista_empleados),
     path('empleados/<int:id>/', empleado),
     path('empleados/registrar/', registrar_empleado),
-    path('empleados/actualizar/<int:id>/', actualizar_empleado),
-    path('empleados/deshabilitar/<int:id>/', deshabilitar_empleado),
+    path('empleados/actualizar/', actualizar_empleado),
+    path('empleados/deshabilitar/', deshabilitar_empleado),
     path('mi-perfil/', mi_perfil, name='mi-perfil'),
     # Rutas de autenticación
     path('login/', login_empleado),
