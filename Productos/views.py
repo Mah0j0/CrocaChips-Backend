@@ -47,7 +47,11 @@ def registrar_producto(request):
 # actualizar_producto - (PUT)
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def actualizar_producto(request, id_producto):
+def actualizar_producto(request):
+    data = request.data
+    id_producto = data.get('id_producto')
+    if not id_producto:
+        return Response({'error': 'El campo id_producto es requerido'}, status=400)
     try:
         producto = Producto.objects.get(id_producto=id_producto) # Buscar producto por ID
     except Producto.DoesNotExist:
@@ -57,7 +61,7 @@ def actualizar_producto(request, id_producto):
     if serializer.is_valid(): # Validar datos
         serializer.save() # Guardar cambios
         return Response(
-            {'mensaje': 'Producto actualizado correctamente', 'data': serializer.data}, 
+            {'mensaje': 'Producto actualizado correctamente', 'Producto': serializer.data}, 
             status=200
         ) # Modified
         
@@ -67,7 +71,11 @@ def actualizar_producto(request, id_producto):
 # eliminar_producto - (DELETE)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def eliminar_producto(request, id_producto):
+def eliminar_producto(request):
+    data = request.data
+    id_producto = data.get('id_producto')
+    if not id_producto:
+        return Response({'error': 'El campo id_producto es requerido'}, status=400)
     try:
         producto = Producto.objects.get(id_producto=id_producto)
     except Producto.DoesNotExist:
@@ -75,4 +83,5 @@ def eliminar_producto(request, id_producto):
 
     producto.habilitado = False
     producto.save()   
-    return Response({'mensaje': 'Producto eliminado correctamente'}, status=200)
+    serializer = ProductoSerializer(producto)
+    return Response({'mensaje': 'Producto eliminado correctamente', 'Producto': serializer.data}, status=200)
