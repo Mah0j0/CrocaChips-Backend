@@ -44,7 +44,12 @@ def registrar_cliente(request):
 # actualizar_cliente - (PUT)
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def actualizar_cliente(request, id_cliente):
+def actualizar_cliente(request):
+
+    data = request.data
+    id_cliente = data.get('id_cliente')
+    if not id_cliente:
+        return Response({'error': 'El campo id_cliente es requerido'}, status=400)
     try:
         cliente = Cliente.objects.get(id_cliente=id_cliente) # Buscar cliente por ID
     except Cliente.DoesNotExist:
@@ -62,7 +67,11 @@ def actualizar_cliente(request, id_cliente):
 # eliminar_cliente - (DELETE)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def eliminar_cliente(request, id_cliente):
+def eliminar_cliente(request):
+    data = request.data
+    id_cliente = data.get('id_cliente')
+    if not id_cliente:
+        return Response({'error': 'El campo id_cliente es requerido'}, status=400)
     try:
         cliente = Cliente.objects.get(id_cliente=id_cliente)
     except Cliente.DoesNotExist:
@@ -70,4 +79,6 @@ def eliminar_cliente(request, id_cliente):
     
     cliente.habilitado = False
     cliente.save()
-    return Response({'mensaje': 'Cliente eliminado correctamente'}, status=200)
+    serializer = ClienteSerializer(cliente)
+
+    return Response({'mensaje': 'Cliente eliminado correctamente', 'Cliente': serializer.data}, status=200)
