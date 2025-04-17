@@ -7,6 +7,7 @@ from .models import MovimientoAlmacen
 from Productos.models import Producto
 from Empleados.models import Empleado
 from .serializers import MovimientoAlmacenSerializer
+from .utils import eliminar_trigger_stock, crear_trigger_stock
 
 # lista de movimientos del tipo 'Despacho' - (GET)
 @api_view(['GET'])
@@ -89,8 +90,7 @@ def registrar_recepcion(request):
     cantidad = int(data.get('cantidad'))
 
     # Desactivar temporalmente el trigger para evitar que se actualice lotes_produccion
-    with connection.cursor() as cursor:
-        cursor.execute("DROP TRIGGER IF EXISTS after_update_stock")
+    eliminar_trigger_stock()
 
     if serializer.is_valid():
         serializer.save()
@@ -109,34 +109,153 @@ def registrar_recepcion(request):
         ).update(cantidad_volatil=0)
 
         # Volver a crear el trigger después de realizar las modificaciones
-        with connection.cursor() as cursor:
-            cursor.execute("""
-            CREATE TRIGGER after_update_stock
-            AFTER UPDATE ON productos
-            FOR EACH ROW
-            BEGIN
-                DECLARE cantidad_nueva INT;
-
-                -- Verificar si el stock ha aumentado
-                IF NEW.stock > OLD.stock THEN
-                    SET cantidad_nueva = NEW.stock - OLD.stock;
-                    
-                    -- Si ya existe un lote para este producto hoy, actualiza
-                    IF EXISTS (
-                        SELECT 1 FROM lotes_produccion
-                        WHERE id_producto = NEW.id_producto AND fecha_elaboracion = CURDATE()
-                    ) THEN
-                        UPDATE lotes_produccion
-                        SET cantidad = cantidad + cantidad_nueva
-                        WHERE id_producto = NEW.id_producto AND fecha_elaboracion = CURDATE();
-                    ELSE
-                        INSERT INTO lotes_produccion (id_producto, cantidad, fecha_elaboracion)
-                        VALUES (NEW.id_producto, cantidad_nueva, CURDATE());
-                    END IF;
-                END IF;
-            END;
-            """)
+        crear_trigger_stock()
 
         return Response(serializer.data, status=201)
 
     return Response(serializer.errors, status=400)
+
+# actualizar_despacho - (PUT)
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def actualizar_despacho(request):
+    id_despacho = request.data.get('id_movimiento')
+
+    try:
+        movimiento = MovimientoAlmacen.objects.get(id_movimiento=id_despacho)
+        producto = Producto.objects.get(id_producto=request.data.get('producto'))
+        empleado = Empleado.objects.get(id=request.data.get('vendedor'))
+    except MovimientoAlmacen.DoesNotExist:
+        return Response({'error': 'Movimiento de despacho no encontrado'}, status=404)
+    except Producto.DoesNotExist:
+        return Response({'error': 'Producto no encontrado'}, status=404)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
+
+    cantidad = int(request.data.get('cantidad'))
+
+    if cantidad > producto.stock:
+        return Response({'error': 'No hay suficiente stock para realizar el despacho'}, status=400)
+
+    diferencia_cantidad = cantidad - movimiento.cantidad
+
+    # Desactivar temporalmente el trigger
+    eliminar_trigger_stock()
+
+    # Actualizar los campos del movimiento
+    movimiento.cantidad = cantidad
+    movimiento.cantidad_volatil = cantidad
+    movimiento.fecha = request.data.get('fecha', movimiento.fecha)
+    movimiento.save()
+
+    # Actualizar stock
+    if diferencia_cantidad < 0:
+        producto.stock += abs(diferencia_cantidad)
+    else:
+        producto.stock -= abs(diferencia_cantidad)
+    producto.save()
+
+    # Reactivar el trigger
+    crear_trigger_stock()
+
+    return Response(MovimientoAlmacenSerializer(movimiento).data, status=200)
+
+
+# actualizar_recepcion - (PUT)
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def actualizar_recepcion(request):
+    id_recepcion = request.data.get('id_movimiento')
+
+    try:
+        movimiento = MovimientoAlmacen.objects.get(id_movimiento=id_recepcion)
+        producto = Producto.objects.get(id_producto=request.data.get('producto'))
+        empleado = Empleado.objects.get(id=request.data.get('vendedor'))
+    except MovimientoAlmacen.DoesNotExist:
+        return Response({'error': 'Movimiento de recepción no encontrado'}, status=404)
+    except Producto.DoesNotExist:
+        return Response({'error': 'Producto no encontrado'}, status=404)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
+
+    cantidad = int(request.data.get('cantidad'))
+    diferencia_cantidad = cantidad - movimiento.cantidad
+
+    # Desactivar temporalmente el trigger
+    eliminar_trigger_stock()
+
+    # Actualización de los campos del movimiento
+    movimiento.cantidad = cantidad
+    movimiento.cantidad_volatil = 0  # Siempre 0 para recepciones
+    movimiento.fecha = request.data.get('fecha', movimiento.fecha)
+    movimiento.save()
+
+    # Actualizar stock del producto (aumentar)
+    if diferencia_cantidad > 0:
+        producto.stock += diferencia_cantidad
+    elif diferencia_cantidad < 0:
+        producto.stock -= abs(diferencia_cantidad)
+    producto.save()
+
+    # Reactivar el trigger
+    crear_trigger_stock()
+
+    return Response(MovimientoAlmacenSerializer(movimiento).data, status=200)
+
+# eliminar_despacho - (DELETE)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def eliminar_despacho(request):
+    id_despacho = request.data.get('id_movimiento')
+
+    try:
+        movimiento = MovimientoAlmacen.objects.get(id_movimiento=id_despacho)
+        producto = Producto.objects.get(id_producto=movimiento.producto.id_producto)
+    except MovimientoAlmacen.DoesNotExist:
+        return Response({'error': 'Movimiento de despacho no encontrado'}, status=404)
+    except Producto.DoesNotExist:
+        return Response({'error': 'Producto no encontrado'}, status=404)
+
+    # Desactivar temporalmente el trigger
+    eliminar_trigger_stock()
+
+    # Actualizar stock del producto (aumentar)
+    producto.stock += movimiento.cantidad
+    producto.save()
+
+    # Eliminar el movimiento
+    movimiento.delete()
+
+    # Reactivar el trigger
+    crear_trigger_stock()
+
+    return Response({'mensaje': 'Movimiento de despacho eliminado correctamente'}, status=200)
+
+# eliminar_recepcion - (DELETE)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def eliminar_recepcion(request):
+    id_recepcion = request.data.get('id_movimiento')
+
+    try:
+        movimiento = MovimientoAlmacen.objects.get(id_movimiento=id_recepcion)
+        producto = Producto.objects.get(id_producto=movimiento.producto.id_producto)
+    except MovimientoAlmacen.DoesNotExist:
+        return Response({'error': 'Movimiento de recepción no encontrado'}, status=404)
+    except Producto.DoesNotExist:
+        return Response({'error': 'Producto no encontrado'}, status=404)
+
+    # Desactivar temporalmente el trigger
+    eliminar_trigger_stock()
+
+    # Actualizar stock del producto (disminuir)
+    producto.stock -= movimiento.cantidad
+    producto.save()
+
+    # Eliminar el movimiento
+    movimiento.delete()
+
+    # Reactivar el trigger
+    crear_trigger_stock()
+
+    return Response({'mensaje': 'Movimiento de recepción eliminado correctamente'}, status=200)
