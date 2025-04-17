@@ -14,3 +14,15 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+class LoteProduccion(models.Model):
+    id_lote = models.AutoField(primary_key=True, db_column='id_lote')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, db_column='id_producto', related_name='lotes')
+    cantidad = models.IntegerField()
+    fecha_elaboracion = models.DateField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'lotes_produccion'
+
+    def __str__(self):
+        return f'Lote {self.id_lote} - {self.producto.nombre}'

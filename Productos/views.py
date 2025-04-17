@@ -1,8 +1,8 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Producto
-from .serializers import ProductoSerializer 
+from .models import Producto, LoteProduccion
+from .serializers import ProductoSerializer, LoteProduccionSerializer
 
 # lista_productos - (GET)
 @api_view(['GET'])
@@ -85,3 +85,12 @@ def eliminar_producto(request):
     producto.save()   
     serializer = ProductoSerializer(producto)
     return Response({'mensaje': 'Producto eliminado correctamente', 'Producto': serializer.data}, status=200)
+
+# Obtener los lotes de producción
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def lista_lotes(request):
+    lotes = LoteProduccion.objects.all()
+    serializer = LoteProduccionSerializer(lotes, many=True)
+    return Response(serializer.data)
