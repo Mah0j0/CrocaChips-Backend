@@ -37,6 +37,37 @@ def movimiento(request, id_movimiento):
     serializer = MovimientoAlmacenSerializer(movimiento)
     return Response(serializer.data)
 
+
+# Obtener productos del vendedor autenticado - (GET)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def lista_productos_vendedor(request):
+    try:
+        empleado = Empleado.objects.get(usuario=request.user)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
+
+    # Filtrar los despachos hechos por el vendedor especificado
+    fecha_actual = date.today()
+    despachos = MovimientoAlmacen.objects.filter(
+        tipo_movimiento='Despacho',
+        vendedor=empleado,
+        fecha=fecha_actual
+    )
+
+    # Crear una lista con los productos y las cantidades volátiles
+    productos = []
+    for despacho in despachos:
+        producto = despacho.producto
+        productos.append({
+            'id_producto': producto.id_producto,
+            'producto_nombre': producto.nombre,  
+            'cantidad_volatil': despacho.cantidad_volatil,
+        })
+
+    return Response(productos)
+
+
 # registrar_despacho - (POST)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
