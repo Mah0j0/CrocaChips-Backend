@@ -13,4 +13,5 @@ urlpatterns = [
     path('movimientos/recepciones/eliminar/', eliminar_recepcion),
 
     path('movimientos/<int:id_movimiento>/', movimiento),
+    path('movimientos/cantidad/', lista_productos_vendedor),
 ]
