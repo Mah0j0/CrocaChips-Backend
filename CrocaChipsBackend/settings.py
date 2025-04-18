@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'Productos',
     'Clientes',
     'MovimientosAlmacen',
+    'Ventas',
 
     # Librerias
     'corsheaders',
