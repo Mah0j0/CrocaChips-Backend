@@ -8,7 +8,17 @@ from .serializers import ProductoSerializer, LoteProduccionSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def lista_productos(request):
-    productos = Producto.objects.all() # Listar
+    # Parámetros de filtrado
+    habilitado = request.query_params.get('habilitado')
+    
+    # Listado de productos
+    productos = Producto.objects.all()
+
+    # Habilitado-No habilitado
+    if habilitado is not None:
+        habilitado_bool = habilitado.lower() == 'true' # String -> Booleano
+        productos = productos.filter(habilitado=habilitado_bool)
+
     serializer = ProductoSerializer(productos, many=True) # Serializar
     return Response(serializer.data) # Retornar datos en formato JSON
 
