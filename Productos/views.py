@@ -11,6 +11,7 @@ def lista_productos(request):
     # Parámetros de filtrado
     habilitado = request.query_params.get('habilitado')
     orden_precio = request.query_params.get('precio')
+    orden_alfabetico = request.quety_params.get('alfabetico')
     
     # Listado de productos
     productos = Producto.objects.all()
@@ -26,6 +27,13 @@ def lista_productos(request):
             productos = productos.order_by('-precio_unitario')  # Descendente
         elif orden_precio.lower() == 'menor':
             productos = productos.order_by('precio_unitario')  # Ascendente
+
+    # Ordenar alfabeticamente
+    if orden_alfabetico:
+        if orden_alfabetico.lower() == 'asc':
+            productos = productos.order_by('nombre') # A-Z
+        elif orden_alfabetico.lower() == 'desc':
+            productos = productos.order_by('-nombre') # Z-A
 
     serializer = ProductoSerializer(productos, many=True) # Serializar
     return Response(serializer.data) # Retornar datos en formato JSON
