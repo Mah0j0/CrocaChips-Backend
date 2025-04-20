@@ -11,7 +11,7 @@ def lista_productos(request):
     # Parámetros de filtrado
     habilitado = request.query_params.get('habilitado')
     orden_precio = request.query_params.get('precio')
-    orden_alfabetico = request.quety_params.get('alfabetico')
+    orden_alfabetico = request.query_params.get('alfabetico')
     
     # Listado de productos
     productos = Producto.objects.all()
