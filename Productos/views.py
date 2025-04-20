@@ -94,3 +94,60 @@ def lista_lotes(request):
     lotes = LoteProduccion.objects.all()
     serializer = LoteProduccionSerializer(lotes, many=True)
     return Response(serializer.data)
+
+# aumentar_stock - (PATCH)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def aumentar_stock(request):
+    data = request.data
+    id_producto = data.get('id_producto')
+    cantidad = data.get('cantidad')
+
+    if not id_producto or not cantidad:
+        return Response({'error': 'Los campos id_producto y cantidad son requeridos'}, status=400)
+
+    try:
+        producto = Producto.objects.get(id_producto=id_producto)
+    except Producto.DoesNotExist:
+        return Response({'error': 'Producto no encontrado'}, status=404)
+    serializer = ProductoSerializer(producto, data=request.data, partial=True)
+    if serializer.is_valid():
+        producto.stock += cantidad
+        producto.save()
+        serializer = ProductoSerializer(producto)
+        return Response(
+            {'mensaje': 'Stock aumentado correctamente', 'Producto': serializer.data}, 
+            status=200
+        )
+    return Response(serializer.errors, status=400)
+
+
+# disminuir_stock - (PATCH)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def disminuir_stock(request):
+    data = request.data
+    id_producto = data.get('id_producto')
+    cantidad = data.get('cantidad')
+
+    if not id_producto or not cantidad:
+        return Response({'error': 'Los campos id_producto y cantidad son requeridos'}, status=400)
+
+    try:
+        producto = Producto.objects.get(id_producto=id_producto)
+    except Producto.DoesNotExist:
+        return Response({'error': 'Producto no encontrado'}, status=404)
+
+    if producto.stock < cantidad:
+        return Response({'error': 'No hay suficiente stock'}, status=400)
+
+    serializer = ProductoSerializer(producto, data=request.data, partial=True)
+    if serializer.is_valid():
+        producto.stock -= cantidad
+        producto.save()
+        serializer = ProductoSerializer(producto)
+        return Response(
+            {'mensaje': 'Stock aumentado correctamente', 'Producto': serializer.data}, 
+            status=200
+        )
+    return Response(serializer.errors, status=400)
