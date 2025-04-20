@@ -10,6 +10,7 @@ from .serializers import ProductoSerializer, LoteProduccionSerializer
 def lista_productos(request):
     # Parámetros de filtrado
     habilitado = request.query_params.get('habilitado')
+    orden_precio = request.query_params.get('precio')
     
     # Listado de productos
     productos = Producto.objects.all()
@@ -18,6 +19,13 @@ def lista_productos(request):
     if habilitado is not None:
         habilitado_bool = habilitado.lower() == 'true' # String -> Booleano
         productos = productos.filter(habilitado=habilitado_bool)
+
+    # Ordenar por precio
+    if orden_precio:
+        if orden_precio.lower() == 'mayor':
+            productos = productos.order_by('-precio_unitario')  # Descendente
+        elif orden_precio.lower() == 'menor':
+            productos = productos.order_by('precio_unitario')  # Ascendente
 
     serializer = ProductoSerializer(productos, many=True) # Serializar
     return Response(serializer.data) # Retornar datos en formato JSON
