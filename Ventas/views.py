@@ -58,13 +58,14 @@ def detalles(request):
     }, status=200)
     
 
-# registrar venta - (POST)
+# registrar venta y agregar detalles (POST)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
 def registrar_venta(request):
     data = request.data
-    print(data)  # Agregar esto para ver qué datos está recibiendo el backend
-    detalles = data.get('detalles', [])  # Los detalles pueden ser vacíos en este paso
+    print("Datos recibidos:", data)
+
+    detalles = data.get('detalles', [])
     id_cliente = data.get('cliente')
 
     if not id_cliente:
@@ -87,38 +88,16 @@ def registrar_venta(request):
         cliente=cliente,
         estado=0,
         fecha=date.today(),
-        precio_total=0  # El precio total se actualizará cuando se agreguen los detalles
+        precio_total=0
     )
 
-    # Respuesta sin detalles
-    venta_serializer = VentaSerializer(venta)
-    return Response({
-        'venta': venta_serializer.data
-    }, status=201)
-
-
-# # agregar detalles a la venta (POST)
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])  
-def agregar_detalles_venta(request):
-    data = request.data
-    id_venta = data.get('venta')
-    detalles = data.get('detalles', [])
-
-    if not detalles or not id_venta:
-        return Response({'error': 'Datos incompletos'}, status=400)
-
-    # Obtener la venta
-    try:
-        venta = Venta.objects.get(id_venta=id_venta)
-    except Venta.DoesNotExist:
-        return Response({'error': 'Venta no encontrada'}, status=404)
-
     total = 0
-
     for detalle in detalles:
         id_producto = detalle.get('producto')
         cantidad = int(detalle.get('cantidad'))
+
+        if not id_producto or cantidad <= 0:
+            return Response({'error': 'Producto o cantidad inválida en los detalles'}, status=400)
 
         try:
             producto = Producto.objects.get(id_producto=id_producto)
@@ -128,27 +107,33 @@ def agregar_detalles_venta(request):
         precio_unitario = producto.precio_unitario
         subtotal = cantidad * precio_unitario
 
-        # Verificar y descontar de los movimientos tipo 'Despacho' del vendedor
         movimientos = MovimientoAlmacen.objects.filter(
             tipo_movimiento='Despacho',
             vendedor=venta.vendedor,
             producto=producto,
-            cantidad_volatil__gt=0
+            cantidad_volatil__gt=0,
+            fecha = date.today()
         ).order_by('fecha')
 
         cantidad_restante = cantidad
 
+        print(f"\nProcesando producto: {producto.nombre} (cantidad solicitada: {cantidad})")
         for mov in movimientos:
+            print(f"ANTES -> Movimiento {mov.id_movimiento}: cantidad_volatil = {mov.cantidad_volatil}")
+
             if cantidad_restante == 0:
                 break
+
             if mov.cantidad_volatil >= cantidad_restante:
                 mov.cantidad_volatil -= cantidad_restante
                 mov.save()
+                print(f"DESPUÉS -> Movimiento {mov.id_movimiento}: cantidad_volatil = {mov.cantidad_volatil}")
                 cantidad_restante = 0
             else:
                 cantidad_restante -= mov.cantidad_volatil
                 mov.cantidad_volatil = 0
                 mov.save()
+                print(f"DESPUÉS -> Movimiento {mov.id_movimiento}: cantidad_volatil = 0")
 
         if cantidad_restante > 0:
             return Response({'error': f'No hay suficiente cantidad disponible del producto {producto.nombre}'}, status=400)
@@ -162,15 +147,15 @@ def agregar_detalles_venta(request):
         )
 
         total += subtotal
+        print(f"Subtotal para {producto.nombre}: {subtotal}")
 
-    # Actualizar precio_total
     venta.precio_total = total
     venta.save()
 
     venta_serializer = VentaSerializer(venta)
     detalles_serializer = DetalleVentaSerializer(DetalleVenta.objects.filter(id_venta=venta.id_venta), many=True)
 
+    print("\nVenta registrada correctamente.")
     return Response({
-        'venta': venta_serializer.data,
-        'detalles': detalles_serializer.data
+        'Venta registrada correctamente',
     }, status=201)

@@ -58,6 +58,9 @@ def registrar_empleado(request):
 
     if Empleado.objects.filter(usuario=usuario_generado).exists():
         return Response({'error': 'El usuario generado ya está registrado'}, status=409)
+    
+    if Empleado.objects.filter(carnet=carnet).exist():
+        return Response({'error': 'El carnet ya está registrado'}, status=409)
 
     clave_generada = f"{nombre[0].upper()}{apellido[0].upper()}{carnet[-4:]}"
     clave_encriptada = bcrypt.hashpw(clave_generada.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
