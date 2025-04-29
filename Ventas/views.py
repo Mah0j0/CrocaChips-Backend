@@ -15,22 +15,29 @@ from django.db import transaction
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  
 def lista_ventas(request):
-    # Usamos select_related para optimizar el acceso a las relaciones de vendedor y cliente
-    ventas = Venta.objects.select_related('vendedor', 'cliente').all()  # Optimización de relaciones
-    data = []
+    # Obtener el empleado autenticado
+    try:
+        empleado = Empleado.objects.get(usuario=request.user)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
 
+    # Si el usuario tiene el rol de 'Vendedor', solo mostrar sus ventas
+    if empleado.rol == 'Vendedor':
+        ventas = Venta.objects.select_related('vendedor', 'cliente').filter(vendedor=empleado).order_by('id_venta')
+    elif empleado.rol == 'Administrador':
+        ventas = Venta.objects.select_related('vendedor', 'cliente').all().order_by('id_venta')
+    else:
+        return Response({'error': 'Acceso no autorizado'}, status=403)
+
+    data = []
     for venta in ventas:
         venta_serializer = VentaSerializer(venta)
-
-        data.append({
-            'venta': venta_serializer.data
-        })
+        data.append({'venta': venta_serializer.data})
 
     return Response(data)
 
 
-
-# lista de una venta y sus detalles - (GET)
+# lista de una venta y sus detalles - (POST)
 @api_view(['POST'])  # Cambio a POST
 @permission_classes([IsAuthenticated])  
 def detalles(request):
