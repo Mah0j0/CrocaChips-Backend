@@ -15,22 +15,29 @@ from django.db import transaction
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  
 def lista_ventas(request):
-    # Usamos select_related para optimizar el acceso a las relaciones de vendedor y cliente
-    ventas = Venta.objects.select_related('vendedor', 'cliente').all()  # Optimización de relaciones
-    data = []
+    # Obtener el empleado autenticado
+    try:
+        empleado = Empleado.objects.get(usuario=request.user)
+    except Empleado.DoesNotExist:
+        return Response({'error': 'Empleado no encontrado'}, status=404)
 
+    # Si el usuario tiene el rol de 'Vendedor', solo mostrar sus ventas
+    if empleado.rol == 'Vendedor':
+        ventas = Venta.objects.select_related('vendedor', 'cliente').filter(vendedor=empleado).order_by('id_venta')
+    elif empleado.rol == 'Administrador':
+        ventas = Venta.objects.select_related('vendedor', 'cliente').all().order_by('id_venta')
+    else:
+        return Response({'error': 'Acceso no autorizado'}, status=403)
+
+    data = []
     for venta in ventas:
         venta_serializer = VentaSerializer(venta)
-
-        data.append({
-            'venta': venta_serializer.data
-        })
+        data.append({'venta': venta_serializer.data})
 
     return Response(data)
 
 
-
-# lista de una venta y sus detalles - (GET)
+# lista de una venta y sus detalles - (POST)
 @api_view(['POST'])  # Cambio a POST
 @permission_classes([IsAuthenticated])  
 def detalles(request):
@@ -152,10 +159,27 @@ def registrar_venta(request):
     venta.precio_total = total
     venta.save()
 
-    venta_serializer = VentaSerializer(venta)
-    detalles_serializer = DetalleVentaSerializer(DetalleVenta.objects.filter(id_venta=venta.id_venta), many=True)
-
     print("\nVenta registrada correctamente.")
     return Response({
         'Venta registrada correctamente',
     }, status=201)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def confirmar_venta(request):
+    data = request.data
+    id_venta = data.get('id_venta')
+
+    if not id_venta:
+        return Response({'error': 'El campo id_venta es requerido.'}, status=400)
+    try:
+        venta = Venta.objects.get(id_venta=id_venta)
+    except Venta.DoesNotExist:
+        return Response({'error': 'Venta no encontrada'}, status=404)
+
+    # Cambiar el estado de la venta a 1 (confirmada)
+    venta.estado = 1
+    venta.save()
+
+    return Response({'mensaje': 'Venta confirmada correctamente'}, status=200)
