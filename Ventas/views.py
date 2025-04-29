@@ -159,10 +159,27 @@ def registrar_venta(request):
     venta.precio_total = total
     venta.save()
 
-    venta_serializer = VentaSerializer(venta)
-    detalles_serializer = DetalleVentaSerializer(DetalleVenta.objects.filter(id_venta=venta.id_venta), many=True)
-
     print("\nVenta registrada correctamente.")
     return Response({
         'Venta registrada correctamente',
     }, status=201)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def confirmar_venta(request):
+    data = request.data
+    id_venta = data.get('id_venta')
+
+    if not id_venta:
+        return Response({'error': 'El campo id_venta es requerido.'}, status=400)
+    try:
+        venta = Venta.objects.get(id_venta=id_venta)
+    except Venta.DoesNotExist:
+        return Response({'error': 'Venta no encontrada'}, status=404)
+
+    # Cambiar el estado de la venta a 1 (confirmada)
+    venta.estado = 1
+    venta.save()
+
+    return Response({'mensaje': 'Venta confirmada correctamente'}, status=200)
