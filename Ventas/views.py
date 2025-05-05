@@ -29,12 +29,8 @@ def lista_ventas(request):
     else:
         return Response({'error': 'Acceso no autorizado'}, status=403)
 
-    data = []
-    for venta in ventas:
-        venta_serializer = VentaSerializer(venta)
-        data.append({'venta': venta_serializer.data})
-
-    return Response(data)
+    venta_serializer = VentaSerializer(ventas, many=True)
+    return Response(venta_serializer.data)
 
 
 # lista de una venta y sus detalles - (POST)
