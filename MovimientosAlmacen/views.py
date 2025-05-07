@@ -63,6 +63,7 @@ def lista_productos_vendedor(request):
             'id_producto': producto.id_producto,
             'producto_nombre': producto.nombre,  
             'cantidad_volatil': despacho.cantidad_volatil,
+            'precio_unitario': producto.precio_unitario,
         })
 
     return Response(productos)
