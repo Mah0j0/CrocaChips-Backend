@@ -6,7 +6,7 @@ from .serializers import ClienteSerializer
 
 # lista_clientes - (GET)
 @api_view(['GET'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def lista_clientes(request):
     clientes = Cliente.objects.all().filter(habilitado=True) # Listar clientes
     serializer = ClienteSerializer(clientes, many=True) # Serializar
@@ -25,7 +25,7 @@ def cliente(request, id_cliente):
 
 # registrar_cliente - (POST)
 @api_view(['POST'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def registrar_cliente(request):
     data = request.data
     
