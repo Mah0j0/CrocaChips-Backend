@@ -6,9 +6,9 @@ from .serializers import ClienteSerializer
 
 # lista_clientes - (GET)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def lista_clientes(request):
-    clientes = Cliente.objects.all() # Listar clientes
+    clientes = Cliente.objects.all().filter(habilitado=True) # Listar clientes
     serializer = ClienteSerializer(clientes, many=True) # Serializar
     return Response(serializer.data) # Retornar datos en formato JSON
 
@@ -25,16 +25,29 @@ def cliente(request, id_cliente):
 
 # registrar_cliente - (POST)
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def registrar_cliente(request):
     data = request.data
     
     # Validar campos requeridos
-    campos = ['nombre', 'direccion', 'telefono']
+    campos = ['nombre', 'carnet', 'direccion', 'telefono']
+    
     for campo in campos:
         if campo not in data:
             return Response({'error': f'El campo {campo} es requerido'}, status=400)
+        
+    # Validar que el carnet no exista
+    if Cliente.objects.filter(carnet=data['carnet']).exists():
+        return Response({'error': 'El carnet ya existe'}, status=400)
     
+    # Validar que el telefono no exista
+    if Cliente.objects.filter(telefono=data['telefono']).exists():
+        return Response({'error': 'El telefono ya existe'}, status=400)
+    
+    # Validar que en teléfono solo se ingresen números y que la longitud sea 8, y que empiece con 6 o 7
+    if not str(data['telefono']).isdigit() or str(data['telefono'])[0] not in ['6', '7'] or len(str(data['telefono'])) != 8:
+        return Response({'error': 'El teléfono debe ser válido'}, status=400)
+
     serializer = ClienteSerializer(data=data)
     if serializer.is_valid(): # Validar datos
         serializer.save() # Crar cliente

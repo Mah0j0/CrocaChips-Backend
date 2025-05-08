@@ -3,6 +3,7 @@ from django.db import models
 class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True, db_column='id_cliente')
     nombre = models.CharField(max_length=30)
+    carnet = models.CharField(max_length=16)
     direccion = models.CharField(max_length=255)
     telefono = models.IntegerField()
     habilitado = models.BooleanField(default=True)
