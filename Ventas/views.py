@@ -73,6 +73,9 @@ def registrar_venta(request):
 
     if not id_cliente:
         return Response({'error': 'Cliente no especificado'}, status=400)
+    
+    if not detalles:
+        return Response({'error': 'Detalles de la venta no especificados'}, status=400)
 
     # Obtener el empleado autenticado
     try:
