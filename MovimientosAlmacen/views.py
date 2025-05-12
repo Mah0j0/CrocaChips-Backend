@@ -47,7 +47,6 @@ def lista_productos_vendedor(request):
     except Empleado.DoesNotExist:
         return Response({'error': 'Empleado no encontrado'}, status=404)
 
-    # Filtrar los despachos hechos por el vendedor especificado
     fecha_actual = date.today()
     despachos = MovimientoAlmacen.objects.filter(
         tipo_movimiento='Despacho',
@@ -56,19 +55,23 @@ def lista_productos_vendedor(request):
         cantidad_volatil__gt=0
     )
 
-    # Crear una lista con los productos y las cantidades volátiles
-    productos = []
+    productos_dict = {}
+
     for despacho in despachos:
-        producto = despacho.producto
-        productos.append({
-            'id_producto': producto.id_producto,
-            'producto_nombre': producto.nombre,  
-            'cantidad_volatil': despacho.cantidad_volatil,
-            'precio_unitario': producto.precio_unitario,
-        })
+        producto_id = despacho.producto.id_producto
+        if producto_id in productos_dict:
+            productos_dict[producto_id]['cantidad_volatil'] += despacho.cantidad_volatil
+        else:
+            productos_dict[producto_id] = {
+                'id_producto': producto_id,
+                'producto_nombre': despacho.producto.nombre,
+                'cantidad_volatil': despacho.cantidad_volatil,
+                'precio_unitario': despacho.producto.precio_unitario,
+            }
+
+    productos = list(productos_dict.values())
 
     return Response(productos)
-
 
 # registrar_despacho - (POST)
 @api_view(['POST'])
