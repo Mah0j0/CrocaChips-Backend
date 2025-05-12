@@ -52,7 +52,8 @@ def lista_productos_vendedor(request):
     despachos = MovimientoAlmacen.objects.filter(
         tipo_movimiento='Despacho',
         vendedor=empleado,
-        fecha=fecha_actual
+        fecha=fecha_actual,
+        cantidad_volatil__gt=0
     )
 
     # Crear una lista con los productos y las cantidades volátiles
