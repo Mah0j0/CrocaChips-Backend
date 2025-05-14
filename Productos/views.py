@@ -53,7 +53,7 @@ def producto(request, id_producto):
 
 # registrar_producto - (POST)
 @api_view(['POST'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def registrar_producto(request):
     data = request.data
 
