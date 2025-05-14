@@ -48,6 +48,10 @@ def registrar_cliente(request):
     if not str(data['telefono']).isdigit() or str(data['telefono'])[0] not in ['6', '7'] or len(str(data['telefono'])) != 8:
         return Response({'error': 'El teléfono debe ser válido'}, status=400)
 
+    # Validar que el carnet tenga entre 5 y 10 dígitos
+    if not len(str(data['carnet'])) >= 5 or not len(str(data['carnet'])) <= 10:
+        return Response({'error': 'El carnet debe tener entre 5 y 10 dígitos'}, status=400)
+    
     serializer = ClienteSerializer(data=data)
     if serializer.is_valid(): # Validar datos
         serializer.save() # Crar cliente
