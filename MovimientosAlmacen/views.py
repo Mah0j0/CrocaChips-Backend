@@ -94,6 +94,9 @@ def registrar_despacho(request):
 
     cantidad = int(data.get('cantidad'))
 
+    if cantidad <= 0:
+        return Response({'error': 'La cantidad debe ser mayor a 0'}, status=400)
+
     if cantidad > producto.stock:
         return Response({'error': 'No hay suficiente stock para realizar el despacho'}, status=400)
 
@@ -124,6 +127,9 @@ def registrar_recepcion(request):
         return Response({'error': 'Producto no encontrado'}, status=404)
 
     cantidad = int(data.get('cantidad'))
+
+    if cantidad <= 0:
+        return Response({'error': 'La cantidad debe ser mayor a 0'}, status=400)
 
     # Desactivar temporalmente el trigger para evitar que se actualice lotes_produccion
     eliminar_trigger_stock()
@@ -170,6 +176,9 @@ def actualizar_despacho(request):
 
     cantidad = int(request.data.get('cantidad'))
 
+    if cantidad <= 0:
+        return Response({'error': 'La cantidad debe ser mayor a 0'}, status=400)
+
     if cantidad > producto.stock:
         return Response({'error': 'No hay suficiente stock para realizar el despacho'}, status=400)
 
@@ -215,6 +224,10 @@ def actualizar_recepcion(request):
         return Response({'error': 'Empleado no encontrado'}, status=404)
 
     cantidad = int(request.data.get('cantidad'))
+
+    if cantidad <= 0:
+        return Response({'error': 'La cantidad debe ser mayor a 0'}, status=400)
+
     diferencia_cantidad = cantidad - movimiento.cantidad
 
     # Desactivar temporalmente el trigger
