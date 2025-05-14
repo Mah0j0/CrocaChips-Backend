@@ -53,7 +53,7 @@ def producto(request, id_producto):
 
 # registrar_producto - (POST)
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def registrar_producto(request):
     data = request.data
 
@@ -62,6 +62,12 @@ def registrar_producto(request):
     for campo in campos:
         if campo not in data:
             return Response({'error': f'El campo {campo} es requerido'}, status=400)
+        
+    if data['stock'] <= 0:
+        return Response({'error': 'El stock debe ser mayor a 0'}, status=400)
+    
+    if data['precio_unitario'] <= 0:
+        return Response({'error' : 'El precio unitario debe ser mayor a 0'}, status=400)
 
     serializer = ProductoSerializer(data=data)
     if serializer.is_valid(): # Validar datos
@@ -89,7 +95,7 @@ def actualizar_producto(request):
         return Response(
             {'mensaje': 'Producto actualizado correctamente', 'Producto': serializer.data}, 
             status=200
-        ) # Modified
+        )
         
     return Response(serializer.errors, status=400) # Bad Request
 
