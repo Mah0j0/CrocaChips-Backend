@@ -13,7 +13,13 @@ from .utils import eliminar_trigger_stock, crear_trigger_stock
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def lista_despachos(request):
-    despachos = MovimientoAlmacen.objects.filter(tipo_movimiento='Despacho')
+    empleado = Empleado.objects.get(usuario=request.user)
+
+    if empleado.rol == 'Administrador' or empleado.rol == 'Almacen':
+        despachos = MovimientoAlmacen.objects.filter(tipo_movimiento='Despacho')
+    else:   
+        return Response({'error': 'Acceso no autorizado'}, status=403)
+    
     serializer = MovimientoAlmacenSerializer(despachos, many=True)
     return Response(serializer.data)
 
@@ -21,7 +27,13 @@ def lista_despachos(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def lista_recepciones(request):
-    recepciones = MovimientoAlmacen.objects.filter(tipo_movimiento='Recepcion')
+    empleado = Empleado.objects.get(usuario=request.user)
+
+    if empleado.rol == 'Administrador' or empleado.rol == 'Almacen':
+        recepciones = MovimientoAlmacen.objects.filter(tipo_movimiento='Recepcion')
+    else:
+        return Response({'error': 'Acceso no autorizado'}, status=403)
+    
     serializer = MovimientoAlmacenSerializer(recepciones, many=True)
     return Response(serializer.data)
 

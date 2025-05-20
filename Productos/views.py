@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Producto, LoteProduccion
 from .serializers import ProductoSerializer, LoteProduccionSerializer
+from Empleados.models import Empleado
 
 # lista_productos - (GET)
 @api_view(['GET'])
@@ -13,8 +14,12 @@ def lista_productos(request):
     orden_precio = request.query_params.get('precio')
     orden_alfabetico = request.query_params.get('alfabetico')
     
-    # Listado de productos
-    productos = Producto.objects.all()
+    empleado = Empleado.objects.get(usuario=request.user) 
+    
+    if empleado.rol == 'Administrador' or empleado.rol == 'Almacen':
+        productos = Producto.objects.all()
+    else:
+        return Response({'error': 'Acceso no autorizado'}, status=403)
 
     # Habilitado-No habilitado
     if habilitado is not None:
@@ -123,7 +128,12 @@ def eliminar_producto(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def lista_lotes(request):
-    lotes = LoteProduccion.objects.all()
+    empleado = Empleado.objects.get(usuario=request.user)
+
+    if empleado.rol == 'Administrador' or empleado.rol == 'Almacen':
+        lotes = LoteProduccion.objects.all()
+    else:
+        return Response({'error': 'Acceso no autorizado'}, status=403)
     serializer = LoteProduccionSerializer(lotes, many=True)
     return Response(serializer.data)
 

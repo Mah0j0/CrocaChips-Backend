@@ -11,7 +11,13 @@ import bcrypt
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def lista_empleados(request):
-    empleados = Empleado.objects.all()
+    empleado = Empleado.objects.get(usuario=request.user)
+
+    if empleado.rol == 'Administrador':
+        empleados = Empleado.objects.all()
+    else:
+        return Response({'error': 'Acceso no autorizado'}, status=403)
+
     serializer = EmpleadoSerializer(empleados, many=True)
     return Response(serializer.data)
 
