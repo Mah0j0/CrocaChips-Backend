@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Empleado
 from .serializers import EmpleadoSerializer
-import bcrypt
+from .utils import *
 
 
 # Obtener todos los empleados (autenticado)
@@ -47,7 +47,7 @@ def empleado(request, id):
 
 # Registrar nuevo empleado
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def registrar_empleado(request):
     data = request.data
 
@@ -60,7 +60,7 @@ def registrar_empleado(request):
     apellido = data['apellido'].strip()
     carnet = data['carnet'].strip()
 
-    usuario_generado = f"{nombre[0].upper()}{apellido.split()[0]}{carnet[:2]}"
+    usuario_generado = generar_usuario(nombre, apellido, carnet)
 
     if Empleado.objects.filter(usuario=usuario_generado).exists():
         return Response({'error': 'El usuario generado ya está registrado'}, status=409)
@@ -77,8 +77,8 @@ def registrar_empleado(request):
     if not str(data['telefono']).isdigit() or str(data['telefono'])[0] not in ['6', '7'] or len(str(data['telefono'])) != 8:
         return Response({'error': 'El teléfono debe ser válido'}, status=400)
 
-    clave_generada = f"{nombre[0].upper()}{apellido[0].upper()}{carnet[-4:]}"
-    clave_encriptada = bcrypt.hashpw(clave_generada.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    clave_generada = generar_clave(nombre, apellido, carnet)
+    clave_encriptada = encriptar_clave(clave_generada)
 
     empleado = Empleado.objects.create(
         nombre=nombre,
