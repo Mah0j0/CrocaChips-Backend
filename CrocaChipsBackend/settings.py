@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'MovimientosAlmacen',
     'Ventas',
     'Notificaciones',
+    'Dashboard',
 
     # Librerias
     'corsheaders',
