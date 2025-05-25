@@ -47,7 +47,7 @@ def empleado(request, id):
 
 # Registrar nuevo empleado
 @api_view(['POST'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def registrar_empleado(request):
     data = request.data
 
