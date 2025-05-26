@@ -1,3 +1,4 @@
+import calendar
 
 MESES = {
     1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
@@ -5,17 +6,10 @@ MESES = {
     9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
 }
 
-DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+def obtener_nombre_mes(mes_numero):
+    return MESES.get(mes_numero, "Mes inválido")
 
-def mapear_meses(ventas_meses_raw):
-    for item in ventas_meses_raw:
-        item['mes'] = MESES[item['mes']]
-    return ventas_meses_raw
+def obtener_nombre_semana(numero_semana, inicio, fin):
+    mes_nombre = MESES.get(inicio.month, "Mes")
+    return f"Sem {numero_semana} ({inicio.day}-{fin.day} {mes_nombre})"
 
-
-
-
-def mapear_semana(ventas_semana_raw):
-    for item in ventas_semana_raw:
-        item['fecha'] = DIAS[item['fecha'].weekday()]
-    return ventas_semana_raw
