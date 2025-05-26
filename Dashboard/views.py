@@ -1,3 +1,5 @@
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 from django.db.models.functions import ExtractMonth
 from django.db.models import Sum
 from django.utils import timezone
@@ -13,7 +15,9 @@ from Ventas.models import Venta
 from .utils import *
 
 
+
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def ventas_mensuales(request):
     año_actual = timezone.now().year
 
@@ -45,6 +49,7 @@ def ventas_mensuales(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def ventas_semanales(request):
     hoy = timezone.now().date()
     año_actual, mes_actual = hoy.year, hoy.month
@@ -88,6 +93,7 @@ def ventas_semanales(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def InformacionGeneral(request):
     cantidad_empleados = Empleado.objects.count()
     cantidad_clientes = Cliente.objects.count()
