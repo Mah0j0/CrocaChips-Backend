@@ -105,16 +105,28 @@ WSGI_APPLICATION = 'CrocaChipsBackend.wsgi.app'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',  
+#         'NAME': 'bd_croca_chips',         
+#         'USER': 'root',         
+#         'PASSWORD': 'tArtcqaAiRUuFxZvUTiqjRNHYagEEdtR',  
+#         'HOST': 'maglev.proxy.rlwy.net',  
+#         'PORT': '43380', 
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',  
-        'NAME': 'bd_croca_chips',         
-        'USER': 'root',         
-        'PASSWORD': 'tArtcqaAiRUuFxZvUTiqjRNHYagEEdtR',  
-        'HOST': 'maglev.proxy.rlwy.net',  
-        'PORT': '43380', 
+        'NAME': 'bsl6xdfbibldusdcaxs9',         
+        'USER': 'ujungiublywt16ih',         
+        'PASSWORD': 'CfRB1Ocj9Vrj5f7mZRzJ',  
+        'HOST': 'bsl6xdfbibldusdcaxs9-mysql.services.clever-cloud.com',  
+        'PORT': '3306', 
     }
 }
+
 
 CORS_ALLOWED_ORIGINS = [
     os.getenv("FRONTEND_URL", "http://localhost:5173"),
