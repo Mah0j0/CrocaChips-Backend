@@ -116,15 +116,26 @@ WSGI_APPLICATION = 'CrocaChipsBackend.wsgi.app'
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',  
+#         'NAME': 'bsl6xdfbibldusdcaxs9',         
+#         'USER': 'ujungiublywt16ih',         
+#         'PASSWORD': 'CfRB1Ocj9Vrj5f7mZRzJ',  
+#         'HOST': 'bsl6xdfbibldusdcaxs9-mysql.services.clever-cloud.com',  
+#         'PORT': '3306', 
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',  
-        'NAME': 'bsl6xdfbibldusdcaxs9',         
-        'USER': 'ujungiublywt16ih',         
-        'PASSWORD': 'CfRB1Ocj9Vrj5f7mZRzJ',  
-        'HOST': 'bsl6xdfbibldusdcaxs9-mysql.services.clever-cloud.com',  
-        'PORT': '3306', 
-    }
+        'NAME': 'bd_croca_chips',         
+        'USER': 'root',         
+        'PASSWORD': 'YVLHnkYQTqPQcQnyHjnddttnnVqgdmSX',  
+        'HOST': 'switchback.proxy.rlwy.net',  
+        'PORT': '30073', 
+    }  
 }
 
 
