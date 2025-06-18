@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'Ventas',
     'Notificaciones',
     'Dashboard',
+    'Prediccion',
 
     # Librerias
     'corsheaders',

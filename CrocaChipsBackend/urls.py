@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/', include('Ventas.urls')),
     path('api/', include('Notificaciones.urls')),
     path('api/', include('Dashboard.urls')),
+    path('api/', include('Prediccion.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
