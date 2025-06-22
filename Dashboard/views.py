@@ -12,7 +12,7 @@ import calendar
 from Empleados.models import Empleado
 from Productos.models import Producto
 from Clientes.models import Cliente
-from Ventas.models import Venta 
+from Ventas.models import Venta, DetalleVenta
 from .utils import *
 
 
@@ -135,3 +135,31 @@ def ventas_vendedor(request):
         for vendedor in top_vendedores
     ]
     return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def ventas_productos(request):
+    hoy = date.today()
+    fecha_limite = resta_meses(hoy, 3)
+
+    productos = DetalleVenta.objects.filter(
+        id_venta__fecha__gte=fecha_limite,
+        id_venta__fecha__lte=hoy
+    ).values(
+        'producto__id_producto', 'producto__nombre'
+    ).annotate(
+        total_vendido=Sum('cantidad')
+    ).order_by('-total_vendido')[:5]
+
+    data = [
+        {
+            'producto': item['producto__nombre'],
+            'total_vendido': item['total_vendido']
+        }
+        for item in productos
+    ]
+
+    return Response(data)
+
+
