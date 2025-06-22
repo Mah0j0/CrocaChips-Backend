@@ -1,7 +1,8 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
-from django.db.models.functions import ExtractMonth
-from django.db.models import Sum
+from django.db.models.functions import ExtractMonth, ExtractYear, ExtractDay
+from django.db.models import Sum, Count, F, Value, Q
+from django.db.models.functions import Concat
 from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -107,3 +108,30 @@ def InformacionGeneral(request):
         'cantidad_clientes': cantidad_clientes,
         'total_ventas': suma_ventas,
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def ventas_vendedor(request):
+    hoy = date.today()
+    fecha_limite = resta_meses(hoy, 3)
+
+    top_vendedores = Empleado.objects.annotate(
+        nombre_completo=Concat(F('nombre'), Value(' '), F('apellido')),
+        total_ventas=Count(
+            'ventas',
+            filter=Q(
+                ventas__fecha__gte=fecha_limite,
+                ventas__fecha__lte=hoy
+            )
+        )
+    ).order_by('-total_ventas')[:5]
+
+    data = [
+        {
+            'vendedor': vendedor.nombre_completo,
+            'total_ventas': vendedor.total_ventas
+        }
+        for vendedor in top_vendedores
+    ]
+    return Response(data)
