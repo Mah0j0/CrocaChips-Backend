@@ -13,6 +13,7 @@ urlpatterns = [
     path('dashboard/ventas/top-productos/', ventas.productos_mas_vendidos),
     path('dashboard/ventas/vendedor/', ventas.ventas_por_vendedor),
     path('dashboard/ventas/ticket-promedio/', ventas.ticket_promedio),
+    path('dashboard/ventas/tendencia/', ventas.tendencia_ventas),
 
     path('dashboard/inventario/stock/', inventario.stock_actual),
     path('dashboard/inventario/bajo-stock/', inventario.productos_bajo_stock),
