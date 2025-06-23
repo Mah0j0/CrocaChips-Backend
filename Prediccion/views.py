@@ -60,7 +60,7 @@ def lista_prediccion_general(request):
         resultado = respuesta.json()
 
         return Response({
-            "año_prediccion": resultado["año"],
+            "anio_prediccion": resultado["año"],
             "mes_prediccion": obtener_nombre_mes(resultado["mes"]),
             "cantidad_anterior": resultado["cantidad_anterior"],
             "prediccion": resultado["prediccion"]
@@ -103,7 +103,7 @@ def lista_prediccion_producto(request):
             if respuesta.status_code == 200:
                 resultado = respuesta.json()
                 predicciones.append({
-                    "año_prediccion": resultado["año"],
+                    "anio_prediccion": resultado["año"],
                     "mes_prediccion": obtener_nombre_mes(resultado["mes"]),
                     "id_producto": resultado["id_producto"],
                     "nombre_producto": producto.nombre,
