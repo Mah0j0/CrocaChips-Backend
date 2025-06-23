@@ -13,30 +13,31 @@ from .utils import obtener_nombre_mes
 PREDICCION_API_URL = "https://web-production-cc23.up.railway.app/"
 
 
-@api_view(['POST'])
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def lista_prediccion_general(request):
     try:
-        # Obtener año y mes del body
-        año = request.data.get('año')
-        mes = request.data.get('mes')
+        # Obtener fecha actual
+        hoy = datetime.today()
+        año_actual = hoy.year
+        mes_actual = hoy.month
 
-        if not año or not mes:
-            return Response({'error': 'Se requieren los campos "año" y "mes".'}, status=400)
+        # Calcular próximo mes y su año correspondiente
+        if mes_actual == 12:
+            año_pred = año_actual + 1
+            mes_pred = 1
+        else:
+            año_pred = año_actual
+            mes_pred = mes_actual + 1
 
-        año = int(año)
-        mes = int(mes)
-
-        if mes < 1 or mes > 12:
-            return Response({'error': 'El mes debe estar entre 1 y 12.'}, status=400)
-
-        # Calcular el mes anterior
-        if mes == 1:
-            año_anterior = año - 1
+        # Calcular mes anterior al mes de predicción
+        if mes_pred == 1:
+            año_anterior = año_pred - 1
             mes_anterior = 12
         else:
-            año_anterior = año
-            mes_anterior = mes - 1
+            año_anterior = año_pred
+            mes_anterior = mes_pred - 1
 
         # Obtener cantidad vendida en el mes anterior
         cantidad_anterior = DetalleVenta.objects.filter(
@@ -46,8 +47,8 @@ def lista_prediccion_general(request):
 
         # Consumir API externa
         payload = {
-            "año": año,
-            "mes": mes,
+            "año": año_pred,
+            "mes": mes_pred,
             "cantidad_anterior": cantidad_anterior
         }
 
@@ -65,57 +66,57 @@ def lista_prediccion_general(request):
             "prediccion": resultado["prediccion"]
         }, status=200)
 
-    except (TypeError, ValueError) as e:
-        return Response({'error': f'Datos inválidos: {str(e)}'}, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
     
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def lista_prediccion_producto(request):
     try:
-        # Obtener año, mes y producto_id del body
-        id_producto = request.data.get('id_producto')
-        año = request.data.get('año')
-        mes = request.data.get('mes')
-        
+        # Calcular próximo mes y año
+        hoy = datetime.today()
+        año_actual = hoy.year
+        mes_actual = hoy.month
 
-        if not all([id_producto, año, mes]):
-            return Response({'error': 'Se requieren los campos "id_producto", "año" y "mes".'}, status=400)
+        if mes_actual == 12:
+            año_pred = año_actual + 1
+            mes_pred = 1
+        else:
+            año_pred = año_actual
+            mes_pred = mes_actual + 1
 
-        id_producto = int(id_producto)
-        año = int(año)
-        mes = int(mes)
+        predicciones = []
 
-        if mes < 1 or mes > 12:
-            return Response({'error': 'El mes debe estar entre 1 y 12.'}, status=400)
+        # Obtener todos los productos
+        productos = Producto.objects.all()
 
-        # Llamar al modelo de predicción sin cantidad_anterior
-        payload = {
-            "id_producto": id_producto,
-            "año": año,
-            "mes": mes,
-        }
+        for producto in productos:
+            payload = {
+                "id_producto": producto.id_producto,
+                "año": año_pred,
+                "mes": mes_pred,
+            }
 
-        respuesta = requests.post(f"{PREDICCION_API_URL}/prediccion-productos/", json=payload)
+            respuesta = requests.post(f"{PREDICCION_API_URL}/prediccion-productos/", json=payload)
 
-        if respuesta.status_code != 200:
-            return Response({'error': 'Error al consumir el modelo de predicción'}, status=502)
+            if respuesta.status_code == 200:
+                resultado = respuesta.json()
+                predicciones.append({
+                    "año_prediccion": resultado["año"],
+                    "mes_prediccion": obtener_nombre_mes(resultado["mes"]),
+                    "id_producto": resultado["id_producto"],
+                    "nombre_producto": producto.nombre,
+                    "prediccion": resultado["prediccion"]
+                })
+            else:
+                predicciones.append({
+                    "id_producto": producto.id_producto,
+                    "nombre_producto": producto.nombre,
+                    "error": "Error al predecir"
+                })
 
-        resultado = respuesta.json()
+        return Response(predicciones, status=200)
 
-        producto = Producto.objects.get(id_producto=id_producto)
-
-        return Response({
-            "año_prediccion": resultado["año"],
-            "mes_prediccion": obtener_nombre_mes(resultado["mes"]),
-            "id_producto": resultado["id_producto"],
-            "nombre_producto": producto.nombre,
-            "prediccion": resultado["prediccion"]
-        }, status=200)
-
-    except (TypeError, ValueError) as e:
-        return Response({'error': f'Datos inválidos: {str(e)}'}, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
